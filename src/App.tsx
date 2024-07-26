@@ -1,35 +1,42 @@
-import { useState } from "react";
+import React, { useReducer, useState } from "react";
 
-const init = [];
+type Todo = {
+  id: number,
+  title: string,
+  done: boolean,
+};
 
-export default function App() {
-  const [todos, setTodos] = useState(init);
+type State = Todo[];
+
+type Action =
+  | { type: "ADD_TODO", payload: string }
+  | { type: "DELETE_TODO", payload: number }
+  | { type: "TOGGLE_DONE", payload: number };
+
+const init: State = [];
+
+const reducer = (state: State, action: Action): State => {
+  switch (action.type) {
+    case "ADD_TODO":
+      return [...state, { id: Date.now(), title: action.payload, done: false }];
+    case "DELETE_TODO":
+      return state.filter((t) => t.id !== action.payload);
+    case "TOGGLE_DONE":
+      return state.map((t) =>
+        t.id === action.payload ? { ...t, done: !t.done } : t
+      );
+    default:
+      return state;
+  }
+};
+
+const App: React.FunctionComponent = () => {
+  const [todos, dispatch] = useReducer(reducer, init);
   const [text, setText] = useState("");
 
-  const deleteTodo = (id) => {
-    const newTodos = todos.filter((t) => t.id !== id);
-    setTodos(newTodos);
-  };
-
-  const toggleDone = (id) => {
-    const newTodos = todos.map((t) => {
-      if (t.id === id) {
-        return { ...t, done: !t.done };
-      }
-      return t;
-    });
-    setTodos(newTodos);
-  };
-
   const addNewTodo = () => {
-    const newTodo = {
-      id: Date.now(),
-      title: text,
-      done: false,
-    };
-
-    setTodos([...todos, newTodo]);
-    setText(""); // Clear the input after adding a new task
+    dispatch({ type: "ADD_TODO", payload: text });
+    setText("");
   };
 
   return (
@@ -41,7 +48,7 @@ export default function App() {
           placeholder="Add a new task"
           value={text}
           onChange={(event) => setText(event.target.value)}
-          className="border  border-gray-600 h-10 rounded-lg p-2 mr-2 "
+          className="border border-gray-600 h-10 rounded-lg p-2 mr-2"
         />
         <button
           id="insBtn"
@@ -68,14 +75,18 @@ export default function App() {
                 <span className="flex-grow">{t.title}</span>
                 <button
                   id="doneBtn"
-                  onClick={() => toggleDone(t.id)}
+                  onClick={() =>
+                    dispatch({ type: "TOGGLE_DONE", payload: t.id })
+                  }
                   className="border-none rounded-lg h-8 absolute right-4 top-1/2 transform -translate-y-1/2 bg-purple-600 p-2 text-white"
                 >
                   ✓
                 </button>
                 <button
                   id="delBtn"
-                  onClick={() => deleteTodo(t.id)}
+                  onClick={() =>
+                    dispatch({ type: "DELETE_TODO", payload: t.id })
+                  }
                   className="border-none rounded-lg absolute right-6 top-1/2 transform -translate-y-1/2 bg-purple-600 p-2 text-white"
                 >
                   🗑️
@@ -100,14 +111,18 @@ export default function App() {
                 </span>
                 <button
                   id="doneBtn"
-                  onClick={() => toggleDone(t.id)}
+                  onClick={() =>
+                    dispatch({ type: "TOGGLE_DONE", payload: t.id })
+                  }
                   className="border-none rounded-lg h-8 absolute right-4 top-1/2 transform -translate-y-1/2 bg-purple-600 p-2 text-white"
                 >
                   ↩
                 </button>
                 <button
                   id="delBtn"
-                  onClick={() => deleteTodo(t.id)}
+                  onClick={() =>
+                    dispatch({ type: "DELETE_TODO", payload: t.id })
+                  }
                   className="border-none rounded-lg absolute right-6 top-1/2 transform -translate-y-1/2 bg-purple-600 p-2 text-white"
                 >
                   🗑️
@@ -118,4 +133,6 @@ export default function App() {
       </div>
     </div>
   );
-}
+};
+
+export default App;
